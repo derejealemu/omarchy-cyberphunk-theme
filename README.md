@@ -34,6 +34,10 @@ itself.
 **[![omarchytheme.com](https://img.shields.io/badge/omarchytheme.com-in%20the%20gallery-blue?style=flat-square)](https://omarchytheme.com)**
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 
+## Desktop preview
+
+![CyberPhunk running on Omarchy with Neovim and btop](desktop.png)
+
 ## The palette
 
 One hex, the whole rig. The signature is **cyan `#22e4ff` → magenta `#ff6bd6`**
@@ -60,7 +64,7 @@ editors, btop, the bar, the lock screen, and the TUI in one pass.
 ## Quick start
 
 ```sh
-git clone https://github.com/derejealemu/cyberphunk && cd cyberphunk
+git clone https://github.com/derejealemu/omarchy-cyberphunk-theme && cd omarchy-cyberphunk-theme
 bash install.sh          # opencode TUI (restart opencode when done)
 bash install-theme.sh    # Omarchy desktop theme
 omarchy theme set cyberphunk
@@ -69,7 +73,7 @@ omarchy theme set cyberphunk
 To install the **theme only** (no opencode / no TUI plugin):
 
 ```sh
-git clone https://github.com/derejealemu/cyberphunk && cd cyberphunk
+git clone https://github.com/derejealemu/omarchy-cyberphunk-theme && cd omarchy-cyberphunk-theme
 bash install-theme.sh
 omarchy theme set cyberphunk
 ```
@@ -77,7 +81,7 @@ omarchy theme set cyberphunk
 Or via Omarchy's own theme-installer (works on any Omarchy box, no clone):
 
 ```sh
-omarchy theme install git@github.com:derejealemu/cyberphunk.git
+omarchy theme install https://github.com/derejealemu/omarchy-cyberphunk-theme.git
 omarchy theme set cyberphunk
 ```
 

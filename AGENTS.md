@@ -1,114 +1,21 @@
 # AGENTS.md
 
-Rules for AI co-editors (and humans) working in this repo.
+Contributor guidance for the CyberPhunk Omarchy desktop theme.
 
-## Hard rules (do not break)
+## Scope
 
-1. **`default` export must be an object with `tui` = a function and NO `server`.**
-   The TUI host's `rQ` validator rejects a plugin that default-exports a bare
-   function, an object with both `server` and `tui`, or an object with a
-   non-function `tui`. This is a load-time hard error.
-2. **Render via `createComponent(Comp, { api })` from `@opentui/solid`.**
-   The slot and dialog renderers expect real VNode instances from the host's
-   Solid reconciler. Returning a plain `{ type, props }` object or `jsx("box", …)`
-   directly from a slot/dialog function will load fine then paint nothing.
-3. **Only these runtime imports** are allowed in `src/plugin.ts`:
-   - `@opentui/solid/jsx-runtime` → `jsx`
-   - `@opentui/solid` → `createComponent`
-   - Node builtins (`node:fs`, `node:path`, `node:url`)
-   Do not import `solid-js`, `@opentui/core`, or `@opentui/keymap` at
-   runtime — they aren't resolvable from the plugin's context reliably.
-4. **No hardcoded absolute paths** (`/home/…`, `/Users/…`). Derive them from
-   `process.env.HOME`, `XDG_CONFIG_HOME`, `XDG_STATE_HOME`, and `import.meta.url`.
-5. **Never abbreviate "CyberPhunk"** in user-facing UI. The brand word shows in
-   full — `CYBERPHUNK` (wordmark, pill, footer, headers, toasts). Short forms
-   like `CP` / `Cyph` / `Cphk` are banned from the rendered TUI. The all-caps
-   `CYBERPHUNK` form is the display name; `cyberphunk` is fine for identifiers,
-   file paths, and slash verbs.
-6. **Typecheck must pass** before any commit: `npm run typecheck`
-   (or `npx tsc --noEmit -p .`).
+This repository contains theme data and artwork for Omarchy. Keep it free of executable installers, plugins, hooks, widgets, build tooling and other bundled code. Put separate tools in their own repositories.
 
-## Where things live
+## Theme files
 
-The repo is a **canonical Omarchy theme** (so it lists on omarchytheme.com):
-the theme files live at the **repo root**, and the opencode TUI plugin is an
-add-on under `src/`.
+- `colors.toml` is the desktop palette source.
+- `hyprland.conf` provides the active-window border styling.
+- `backgrounds/` contains compressed WebP wallpaper artwork.
+- `preview.png`, `preview-unlock.png` and `unlock.png` are theme artwork.
+- `icons.theme` and `lazygit.yml` are optional preference/configuration files.
 
-- `colors.toml` — the **Omarchy** palette. Single source of truth for the whole
-  desktop (borders, terminals, btop, editors, lock) AND the palette the
-  omarchytheme.com scraper reads. Keep its hex colors consistent with
-  `src/cyberphunk.theme.json` when you change the palette. Must stay at the
-  repo **root** for the theme scraper to find it.
-- `hyprland.conf` — the Hyprland border override (gradient active border).
-  Copied to the theme dir by `install-theme.sh`.
-- `preview.png` — required by the theme scraper (theme card image).
-- `preview-unlock.png`, `unlock.png`, `backgrounds/*.png` — desktop art.
-  Regenerate from source artwork rather than hand-editing raster pixels when the
-  look changes.
-- `icons.theme`, `lazygit.yml` — icon-set preference and matching lazygit palette.
-- `src/plugin.ts` — the opencode TUI plugin (entry point; all UI logic, verbs,
-  event handlers).
-- `src/cyberphunk.theme.json` — the opencode TUI theme (12 colors + semantic
-  aliases). Keep in sync with `~/.config/opencode/themes/cyberphunk.json`.
-  (Distinct from the root `colors.toml` — different file, different consumer.)
-- `install.sh` — one-liner installer for the TUI. Idempotent. Backs up `tui.json`.
-- `install-theme.sh` — one-liner installer for the Omarchy desktop theme. Idempotent;
-  stages the root theme files → `~/.config/omarchy/themes/cyberphunk`, offers the
-  lazygit palette, never overwrites an existing `~/.config/lazygit/config.yml`.
-- `tui.json` (in the *user's* `~/.config/opencode/`) — what actually loads
-  the plugin at runtime. Do not commit a `tui.json` in this repo; it's a
-  per-machine config.
+Keep gallery artwork representative of the actual desktop theme. Do not include personal information in screenshots.
 
-## Testing workflow
+## Editing and validation
 
-There is no test runner. The only reliable oracle is:
-
-1. Edit `src/plugin.ts` or the theme.
-2. Copy to `~/.config/opencode/plugins/cyberphunk.ts` **or** point
-   `tui.json → plugin` at `src/plugin.ts` directly (the latter is in
-   `install.sh`).
-3. Restart opencode (kill the TUI process, not the shell).
-4. Watch `~/.local/state/cyberphunk/log.jsonl` for probe/err lines.
-5. Press `ctrl+d` to open the deck, `esc` (or `ctrl+e`) to close.
-6. Check the pane via `tmux capture-pane` (if in tmux) or by eye.
-
-**Do not** rely on `tmux new-session` as the test harness — the test
-process can attach to the host's `--auto` server via the inherited
-`OPENCODE_PID` env var, and the TUI plugin path in that case never fires
-(`tui()` doesn't run, only the `default` export is validated). Always
-clear `OPENCODE_PID` and `OPENCODE` from the test env, or test by
-restarting the real user window.
-
-## What the real API is (from `@opencode-ai/plugin/dist/tui.d.ts`)
-
-The plugin receives `TuiPluginApi` — **not** the `PluginInput` a server
-plugin gets. The key surfaces:
-
-- `api.slots.register({ id, slots: { home_logo, home_footer, app_bottom, … } })`
-  — slot names are a fixed list; see `TuiHostSlotMap` in `tui.d.ts`.
-- `api.ui.dialog.replace(render, onClose)` + `api.ui.dialog.setSize("medium"|"large"|"xlarge")`
-  + `api.ui.dialog.clear()`.
-- `api.ui.toast({ variant, title, message })`.
-- `api.keymap.registerLayer({ commands: TuiCommandLike[], bindings: BindingLike[] })`.
-- `api.theme.install(jsonPath)` + `api.theme.set(name)`.
-- `api.state.session` — **object of methods** (`count()`, `get(id)`,
-  `messages(id)`, `todo(id)`, `status(id)`, `permission(id)`, `question(id)`).
-  Read the type, not the value.
-- `api.route.current` — the active route; sessionID is at
-  `.params.sessionID` when `route.current.name === "session"`.
-- `api.attention.notify({ title, message, notification, sound })`.
-- `api.kv.get(key, fallback)` / `api.kv.set(key, value)` — persist plugin
-  state across TUI restarts.
-- `api.event.on(type, handler)` — returns an unsubscribe. All event type
-  names are in `@opencode-ai/sdk/dist/v2/gen/types.gen.d.ts`.
-
-Don't guess field names from the surface list; read the types.
-
-## Style
-
-- ESM, TypeScript, `strict: true`, `noUncheckedIndexedAccess` not set.
-- No `console.log` — use the built-in `probe`/`errlog` for diagnostics;
-  they write to `~/.local/state/cyberphunk/log.jsonl`.
-- No comments explaining *what* the code does (the code does that); short
-  *why* comments only where the reason is non-obvious (e.g. the render
-  contract above).
+Prefer editing source artwork and palette files rather than hand-editing rendered screenshots. Check changed image dimensions, format and size. Review the complete diff and ensure no executable code or build/install tooling has been introduced.
